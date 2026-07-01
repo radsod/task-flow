@@ -5,6 +5,10 @@ import { auth } from '../middleware/auth.js'
 import { validateRequest } from '../middleware/validateRequest.js'
 import { AuthRequest } from '../utils/jwt.js'
 import { AppError } from '../middleware/errorHandler.js'
+import { indexDocument } from '../ai/rag.service.js'
+import { task } from '@langchain/langgraph'
+import { error } from 'console'
+
 const router = Router()
 router.use(auth)
 // POST /api/tasks
@@ -44,10 +48,21 @@ router.post('/', [
         }
       }
     })
+    indexDocument({
+      id: task.id,
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      priority: task.priority,
+      projectName: projectId.name || 'Nieznany projekt',
+      assigneeName: null,
+    }).catch((err) => console.error('Błąd indeksowania:', error))
     res.status(201).json(task)
   } catch (error) {
     next(error)
   }
+
+  
 })
 // PATCH /api/tasks/:id
 router.patch('/:id', [
